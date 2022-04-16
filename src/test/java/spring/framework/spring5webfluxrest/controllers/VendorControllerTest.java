@@ -11,8 +11,10 @@ import spring.framework.spring5webfluxrest.domain.Vendor;
 import spring.framework.spring5webfluxrest.repositories.VendorRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class VendorControllerTest {
 
@@ -73,5 +75,43 @@ class VendorControllerTest {
                 .expectStatus()
                 .isOk();
 
+    }
+
+    @Test
+    void patchWithChanges() {
+        given(vendorRepository.findById(anyString()))
+                .willReturn(Mono.just(Vendor.builder().firstName("OldName").lastName("OldLastName").build()));
+
+        given(vendorRepository.save(any(Vendor.class)))
+                .willReturn(Mono.just(Vendor.builder().build()));
+
+        Mono<Vendor> vendorToPatch = Mono.just(Vendor.builder().firstName("NewName").lastName("NewLastName").build());
+
+        webTestClient.patch().uri("/api/v1/vendors/someId")
+                .body(vendorToPatch, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(vendorRepository, times(2)).save(any());
+    }
+
+    @Test
+    void patchWithoutChanges() {
+        given(vendorRepository.findById(anyString()))
+                .willReturn(Mono.just(Vendor.builder().firstName("OldName").build()));
+
+        given(vendorRepository.save(any(Vendor.class)))
+                .willReturn(Mono.just(Vendor.builder().build()));
+
+        Mono<Vendor> vendorToPatch = Mono.just(Vendor.builder().firstName("OldName").build());
+
+        webTestClient.patch().uri("/api/v1/vendors/someId")
+                .body(vendorToPatch, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(vendorRepository, never()).save(any());
     }
 }

@@ -8,6 +8,8 @@ import reactor.core.publisher.Mono;
 import spring.framework.spring5webfluxrest.domain.Vendor;
 import spring.framework.spring5webfluxrest.repositories.VendorRepository;
 
+import java.util.Objects;
+
 @RestController
 public class VendorController {
     private final VendorRepository vendorRepository;
@@ -36,5 +38,22 @@ public class VendorController {
     public Mono<Void> update(@PathVariable String id, @RequestBody Vendor vendor) {
         vendor.setId(id);
         return vendorRepository.save(vendor).then();
+    }
+
+    @PatchMapping("/api/v1/vendors/{id}")
+    public Mono<Vendor> patch(@PathVariable String id, @RequestBody Vendor vendor) {
+        Vendor foundVendor = vendorRepository.findById(id).block();
+
+        if (!Objects.equals(foundVendor.getFirstName(), vendor.getFirstName())) {
+            foundVendor.setFirstName(vendor.getFirstName());
+            vendorRepository.save(foundVendor);
+        }
+
+        if (!Objects.equals(foundVendor.getLastName(), vendor.getLastName())) {
+            foundVendor.setLastName(vendor.getLastName());
+            vendorRepository.save(foundVendor);
+        }
+
+        return Mono.just(foundVendor);
     }
 }
