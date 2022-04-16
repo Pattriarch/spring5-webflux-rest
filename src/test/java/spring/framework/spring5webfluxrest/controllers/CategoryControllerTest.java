@@ -72,7 +72,7 @@ class CategoryControllerTest {
         Mono<Category> catToUpdate = Mono.just(Category.builder().description("Some info").build());
 
         webTestClient.put()
-                .uri("/api/v1/categories")
+                .uri("/api/v1/categories/abab")
                 .body(catToUpdate, Category.class)
                 .exchange()
                 .expectStatus()
